@@ -11,27 +11,27 @@ function cannonBallLeftViewport(cannonBall, index){
 }
 
 //Check to see if tank has collided with the object held as the second argument of the function. le -> left edge, etc.
-function hasTankHitObject(tank, obj){
+function hasTankHitStage(tank, stage){
     //Work out rotated coordinates for tank
     let rt = getRotatedTankCoordinates(tank);
     //Top Left Edge
-    if(rt.tl.x < obj.le || rt.tl.y < obj.te || 
-        rt.tl.x > obj.re || rt.tl.y > obj.be ){
+    if(rt.tl.x < stage.le || rt.tl.y < stage.te || 
+        rt.tl.x > stage.re || rt.tl.y > stage.be ){
         tank.blockedDirection = "FORWARD";
         tank.blockedRotation = "LEFT";
     //Top Right Edge
-    }else if(rt.tr.x < obj.le || rt.tr.y < obj.te || rt.tr.x > obj.re || 
-        rt.tr.y > obj.be ){
+    }else if(rt.tr.x < stage.le || rt.tr.y < stage.te || rt.tr.x > stage.re || 
+        rt.tr.y > stage.be ){
         tank.blockedDirection = "FORWARD";
         tank.blockedRotation = "RIGHT";
     //Bottom Left Edge
-    }else if(rt.bl.x < obj.le ||rt.bl.y < obj.te ||
-        rt.bl.x > obj.re || rt.bl.y > obj.be){
+    }else if(rt.bl.x < stage.le ||rt.bl.y < stage.te ||
+        rt.bl.x > stage.re || rt.bl.y > stage.be){
             tank.blockedDirection = "BACKWARD";
             tank.blockedRotation = "RIGHT";
     //Bottom Right Edge
-    }else if(rt.br.x < obj.le || rt.br.y < obj.te || rt.br.x > obj.re || 
-        rt.br.y > obj.be){
+    }else if(rt.br.x < stage.le || rt.br.y < stage.te || rt.br.x > stage.re || 
+        rt.br.y > stage.be){
             tank.blockedDirection = "BACKWARD";
             tank.blockedRotation = "LEFT";
     }
@@ -59,7 +59,7 @@ function cannonBallsHitEdgeOfCanvas(cannonBall){
 }
 
 //Check to see if tank is in barrier. Used to prevent tank from spawning in barrier.
-function tankInBarrier(tank){
+function tankInBarrier(tank, otherTank){
     let collision = false;
     barriers.forEach(barrier => {
         //Work out barrier edges
@@ -76,8 +76,18 @@ function tankInBarrier(tank){
         ){
             collision = true;
         }
-
     });
+    //After loop
+    if(otherTank && !collision){
+        if(
+            !(tank.x > otherTank.x + tankWidth ||
+                tank.x+tank.width<otherTank.x ||
+                tank.y>otherTank.y+tankHeight ||
+                tank.y+tank.height < otherTank.y)
+        ){
+            collision = true;
+        }
+    }
     return collision;
 }
 
@@ -119,11 +129,12 @@ function cannonBallHitBarrier(cannonBall, type){
         cannonBall.vx *= -1;
     }else if(type === "DIAG"){
         if(Math.abs(cannonBall.vx) > Math.abs(cannonBall.vy)){
-            cannonBall.vy *= -1;
-        }else{
             cannonBall.vx *= -1;
+        }else{
+            cannonBall.vy *= -1;
         }
     }
+    cannonBall.collide();
 }
 
 //Check to see if tank has hit one of the barriers
@@ -136,6 +147,14 @@ function hasTankCollidedWithBarrier(tank){
         let bottomEdge = topEdge + stageDivPathHeight + 1;
         //Find rotated tank coordinates
         let rt = getRotatedTankCoordinates(tank);
+        //Diagonal Collisions
+        if(rt.mt.x>leftEdge && rt.mt.x<rightEdge && rt.mt.y>topEdge && rt.mt.y<bottomEdge){
+            tank.blockedDirection = "FORWARD";
+            tank.rotationDirection = "NAN";
+        }else if(rt.mb.x>leftEdge && rt.mb.x<rightEdge && rt.mb.y>topEdge && rt.mb.y<bottomEdge){
+            tank.blockedDirection = "BACKWARD";
+            tank.rotationDirection = "NAN";
+        }
         //Top Left Edge Only
         if(rt.tl.x>leftEdge && rt.tl.x<rightEdge && rt.tl.y>topEdge && rt.tl.y<bottomEdge){
             tank.blockedDirection = "FORWARD";
@@ -154,4 +173,105 @@ function hasTankCollidedWithBarrier(tank){
             tank.blockedRotation = "LEFT";
         }
     });
+}
+
+//Check to see if cannonBall has collided with tank
+function hasCannonBallHitTank(tank){
+    for(let i = 0; i < cannonBalls.length; i++){
+        let cannonBall = cannonBalls[i];
+        //We want to prevent the cannonBall from colliding with the tank when it is shot out of it
+        if(new Date() - cannonBall.creationDate > 100){
+        //Current rotation of tank
+        let rotatedAngle = degreesIntoRadians(tank.rotationStore) - degreesIntoRadians(90);
+        //Original rotation point of tank
+        let centerX = tank.x + (tank.width / 2);
+        let centerY = tank.y + (tank.height / 2) + tankHitBox.height;
+        //Rotate circle so that it is on the same axis as circle
+        let unrotatedCircleX = Math.cos(rotatedAngle) * (cannonBall.x - centerX) - Math.sin(rotatedAngle) *
+        (cannonBall.y - centerY) + centerX;
+        let unrotatedCircleY = Math.sin(rotatedAngle) * (cannonBall.x - centerX) + Math.cos(rotatedAngle) * 
+        (cannonBall.y - centerY) + centerY;
+        // Closest point in the rectangle to the center of circle rotated backwards(unrotated)
+        let closestX, closestY;
+        // Find the unrotated closest x point from center of unrotated circle
+        if (unrotatedCircleX  < tank.x){
+            closestX = tank.x;
+        }else if (unrotatedCircleX  > tank.x + tank.width){
+            closestX = tank.x + tank.width;
+        }else{
+            closestX = unrotatedCircleX ;
+        }
+        // Find the unrotated closest y point from center of unrotated circle
+        if (unrotatedCircleY < tank.y){
+            closestY = tank.y + tankHitBox.height;
+        }else if (unrotatedCircleY > tank.y + tank.height){
+            closestY = tank.y + tank.height;
+        }else{
+            closestY = unrotatedCircleY;
+        }
+        //Determine collision
+        let distance = findDistance(unrotatedCircleX, unrotatedCircleY, closestX, closestY);
+
+        if(distance < cannonBall.radius){
+            tank.destroyState = "BEGIN";
+        }
+        }
+
+    }
+}
+
+//Tank colliding with another tank
+function tankOnTankColl(index){
+    //Red tank is at index 0. Green tank is at index 1.
+    let thisTank = tanks[index];
+    let otherTank = index === 0 ? tanks[1] : tanks[0];
+    //Get rotated coordinates for both tanks. thisTankRotated & otherTankRotated
+    let tTR = getRotatedTankCoordinates(thisTank);
+    let oTR = getRotatedTankCoordinates(otherTank);
+    //Vertices & Edges are listed in clockwise order. Starting from the top right
+    let thisTankVertices = [
+        new xy(tTR.tr.x, tTR.tr.y),
+        new xy(tTR.br.x, tTR.br.y),
+        new xy(tTR.bl.x, tTR.bl.y),
+        new xy(tTR.tl.x, tTR.tl.y),
+    ];
+    let thisTankEdges = [
+        new xy(tTR.br.x - tTR.tr.x, tTR.br.y - tTR.tr.y),
+        new xy(tTR.bl.x - tTR.br.x, tTR.bl.y - tTR.br.y),
+        new xy(tTR.tl.x - tTR.bl.x, tTR.tl.y - tTR.bl.y),
+        new xy(tTR.tr.x - tTR.tl.x, tTR.tr.y - tTR.tl.y)
+    ];
+    let otherTankVertices = [
+        new xy(oTR.tr.x, oTR.tr.y),
+        new xy(oTR.br.x, oTR.br.y),
+        new xy(oTR.bl.x, oTR.bl.y),
+        new xy(oTR.tl.x, oTR.tl.y),
+    ];
+    let otherTankEdges = [
+        new xy(oTR.br.x - oTR.tr.x, oTR.br.y - oTR.tr.y),
+        new xy(oTR.bl.x - oTR.br.x, oTR.bl.y - oTR.br.y),
+        new xy(oTR.tl.x - oTR.bl.x, oTR.tl.y - oTR.bl.y),
+        new xy(oTR.tr.x - oTR.tl.x, oTR.tr.y - oTR.tl.y)
+    ];
+    let thisTankPolygon = new polygon(thisTankVertices, thisTankEdges);
+    let otherTankPolygon = new polygon(otherTankVertices, otherTankEdges);
+
+    if(sat(thisTankPolygon, otherTankPolygon) && !thisTank.tankVsTankCol){
+        //Block Direction
+        if(thisTank.lastKeyPressed[0] === "w" || thisTank.lastKeyPressed[0] === "ArrowUp"){
+            thisTank.blockedDirection = "FORWARD";
+        }else{
+            thisTank.blockedDirection = "BACKWARD";
+        }
+        //Block Rotation
+        if(thisTank.lastKeyPressed[1] === "a" || thisTank.lastKeyPressed[1] === "ArrowLeft"){
+            thisTank.blockedRotation = "LEFT";
+        }else{
+            thisTank.blockedRotation = "RIGHT";
+        }
+
+        thisTank.tankVsTankCol = true;
+    }
+
+
 }

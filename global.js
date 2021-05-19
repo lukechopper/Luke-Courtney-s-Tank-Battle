@@ -41,12 +41,18 @@ function getRotatedTankCoordinates(tank){
     let topRight = workOutNewPoints(centerX, centerY, tank.x + tank.width, tank.y + tankHitBox.height, rotatedAngle);
     let bottomLeft = workOutNewPoints(centerX, centerY, tank.x, tank.y + tank.height, rotatedAngle);
     let bottomRight = workOutNewPoints(centerX, centerY, tank.x + tank.width, tank.y + tank.height, rotatedAngle);
+    //Middle Top & Middle Bottom
+    let middleTop = workOutNewPoints(centerX, centerY, tank.x + (tank.width / 2), tank.y + tankHitBox.height, rotatedAngle);
+    let middleBottom = workOutNewPoints(centerX, centerY, tank.x + (tank.width / 2), tank.y + tank.height, rotatedAngle);
+
 
     return{
         tl: topLeft,
         tr: topRight,
         bl: bottomLeft,
-        br: bottomRight
+        br: bottomRight,
+        mt: middleTop,
+        mb: middleBottom,
     }
 }
 
@@ -93,5 +99,80 @@ function splitArrayMissingVal(array){
     
 }
 
+//Find distance (classic Pythagorus function)
+function findDistance(fromX, fromY, toX, toY){
+    let a = Math.abs(fromX - toX);
+    let b = Math.abs(fromY - toY);
+ 
+    return Math.sqrt((a * a) + (b * b));
+}
 
+//Functional objects for the Seperate Axis Theorum (SAT)
+function xy(x,y){
+    this.x = x;
+    this.y = y;
+};
 
+function polygon(vertices, edges){
+    this.vertex = vertices;
+    this.edge = edges;
+};
+
+//The actual Seperate Axis Theorum function
+function sat(polygonA, polygonB){
+    var perpendicularLine = null;
+    var dot = 0;
+    var perpendicularStack = [];
+    var amin = null;
+    var amax = null;
+    var bmin = null;
+    var bmax = null;
+    for(var i = 0; i < polygonA.edge.length; i++){
+         perpendicularLine = new xy(-polygonA.edge[i].y,
+                                     polygonA.edge[i].x);
+         perpendicularStack.push(perpendicularLine);
+    }
+    for(var i = 0; i < polygonB.edge.length; i++){
+         perpendicularLine = new xy(-polygonB.edge[i].y,
+                                     polygonB.edge[i].x);
+         perpendicularStack.push(perpendicularLine);
+    }
+    for(var i = 0; i < perpendicularStack.length; i++){
+         amin = null;
+         amax = null;
+         bmin = null;
+         bmax = null;
+         for(var j = 0; j < polygonA.vertex.length; j++){
+              dot = polygonA.vertex[j].x *
+                    perpendicularStack[i].x +
+                    polygonA.vertex[j].y *
+                    perpendicularStack[i].y;
+              if(amax === null || dot > amax){
+                   amax = dot;
+              }
+              if(amin === null || dot < amin){
+                   amin = dot;
+              }
+         }
+         for(var j = 0; j < polygonB.vertex.length; j++){
+              dot = polygonB.vertex[j].x *
+                    perpendicularStack[i].x +
+                    polygonB.vertex[j].y *
+                    perpendicularStack[i].y;
+              if(bmax === null || dot > bmax){
+                   bmax = dot;
+              }
+              if(bmin === null || dot < bmin){
+                   bmin = dot;
+              }
+         }
+         if((amin < bmax && amin > bmin) ||
+            (bmin < amax && bmin > amin)){
+              continue;
+         }
+         else {
+              return false;
+         }
+    }
+    return true;
+}

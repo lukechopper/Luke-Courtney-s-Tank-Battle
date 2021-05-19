@@ -13,6 +13,10 @@ class Tank{
         this.canShoot = true; //Prevent cannon balls from being spammed
         this.blockedDirection = "NAN";
         this.blockedRotation = "NAN";
+        this.lastKeyPressed = ["NAN","NAN"] //First is dir. Second is rotation.
+        this.tankVsTankCol = false; //Used in tank on tank collision
+        this.destroyState = "NAN";
+        this.alphaLevel = 1;
     }
     rotate(){
         let centerX = this.x + (this.width / 2);
@@ -23,6 +27,7 @@ class Tank{
             if(this.blockedRotation === "LEFT"){
                 this.blockedRotation = "NAN";
                 this.blockedDirection = "NAN";
+                this.tankVsTankCol = false;
             } 
         } 
         if(this.rotationDirection === "LEFT" && this.blockedRotation !== "LEFT"){
@@ -30,6 +35,7 @@ class Tank{
             if(this.blockedRotation === "RIGHT"){
                 this.blockedRotation = "NAN";
                 this.blockedDirection = "NAN";
+                this.tankVsTankCol = false;
             }
         } 
         let fixedRotation = degreesIntoRadians(this.rotationStore) - degreesIntoRadians(90);
@@ -53,6 +59,7 @@ class Tank{
             if(this.blockedDirection === "BACKWARD"){
                 this.blockedRotation = "NAN";
                 this.blockedDirection = "NAN";
+                this.tankVsTankCol = false;
             }
         }else if(this.direction === "BACKWARD" && this.blockedDirection !== "BACKWARD"){
             this.x += velocityX * this.moveSpeed;
@@ -60,14 +67,23 @@ class Tank{
             if(this.blockedDirection === "FORWARD"){
                 this.blockedRotation = "NAN";
                 this.blockedDirection = "NAN";
+                this.tankVsTankCol = false;
             }
         }
         ctx.translate(-centerX, -centerY);
         ctx.restore();
     }
+    destroy(){
+        this.alphaLevel -= 0.05;
+        if(this.alphaLevel < 0) {
+            this.alphaLevel = 0;
+        }
+        ctx.globalAlpha = this.alphaLevel;
+    }
     draw(){
         if(this.direction !== "NAN") this.move();
         ctx.save();
+        if(this.destroyState === "BEGIN") this.destroy();
         this.rotate();
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
         ctx.restore();
@@ -77,31 +93,6 @@ class Tank{
 const tankWidth = canvasCol *  23;
 const tankHeight = canvasCol * 33;
 
-//Spawn tank so that it is always on path
-function spawnTank(){
-    let = null;
-    let yCord = null;
-
-    let preventInfiniteLoop = 0;
-
-    do{
-        preventInfiniteLoop++;
-        xCord = generateRandomNumber(stageX + tankWidth , (stageX + stageWidth) - (tankWidth ) );
-        yCord = generateRandomNumber(stageY + tankHeight , (stageY + stageHeight) - (tankHeight ) );
-        if(preventInfiniteLoop >= 10){
-            newBorders();
-            preventInfiniteLoop = 0;
-        }
-    }while(tankInBarrier({x:xCord,y:yCord,width:tankWidth,height:tankHeight}));
-    
-    
-
-    return{
-        x: xCord,
-        y: yCord
-    }
-    
-}
 
 class CannonBall{
     constructor(x, y, vx, vy){
@@ -113,7 +104,7 @@ class CannonBall{
         this.alphaLevel = 1;
         this.creationDate = new Date();
         this.shouldDestroy = false;
-
+        this.collTime = null; //Used to prevent any collision errors
     }
     move(){
         this.x += this.vx;
@@ -134,6 +125,21 @@ class CannonBall{
         ctx.globalAlpha = this.alphaLevel;
         this.draw();
         ctx.restore();
+    }
+    collide(){
+        if(this.collTime){
+            /*If there has been less then 3 milliseconds before last collision, then we know that the ball must be
+            stuck in a wall. In which case we will seperate the ball from the wall so that it is no longer stuck.*/
+            if(new Date() - this.collTime < 3){
+                let angle = Math.atan2(this.vy, this.vx);
+                let newVx = Math.cos(angle);
+                let newVy = Math.sin(angle);
+                this.x += newVx * (this.radius * 2);
+                this.y += newVy * (this.radius * 2);
+            }
+        }
+
+        this.collTime = new Date();
     }
     draw(){
         ctx.beginPath();

@@ -29,7 +29,7 @@ function create2DArray(num, row, col){
 //Get values to base our 2D Array
 let pathWidth = Math.round(stageWidth / (canvasRow * 85));
 let pathHeight = Math.round(stageHeight / (canvasCol * 85));
-
+//So randomly generated barriers fit stage width & height
 let stageDivPathWidth = stageWidth / pathWidth;
 let stageDivPathHeight = stageHeight / pathHeight;
 
@@ -136,28 +136,6 @@ function condensePath(pathArr){
 let barriers = generateMapGraphics(randomMap, 1);
 barriers = condensePath(barriers);
 
-//Create new borders. Prevent infinite loop.
-function newBorders(){
-    //Generate Background Border
-    stageWidth = canvasCol * generateRandomNumber(200, 900);
-    stageX = canvasCol * 500 - (stageWidth / 2); //Half way width. 500 is half of 1000
-    stageHeight = canvasRow * generateRandomNumber(300, 700);
-    stageY = canvasRow * 380 - (stageHeight / 2); //Y is slightly offset to make room for main menu
-    //Get values to base our 2D Array
-    pathWidth = Math.round(stageWidth / (canvasRow * 85));
-    pathHeight = Math.round(stageHeight / (canvasCol * 85));
-
-    stageDivPathWidth = stageWidth / pathWidth;
-    stageDivPathHeight = stageHeight / pathHeight;
-    
-    //Create Map & barriers again.
-    randomMap = createMap();
-
-    barriers = generateMapGraphics(randomMap, 1);
-    barriers = condensePath(barriers);
-}
-
-
 function drawMap(){
     backgroundBorder();
     //Draw Barriers
@@ -168,3 +146,21 @@ function drawMap(){
     });
 }
 
+//Generate new map to avoid infinite loop
+function newMap(){
+    //Generate Background Border
+    stageWidth = canvasCol * generateRandomNumber(200, 900);
+    stageX = canvasCol * 500 - (stageWidth / 2); //Half way width. 500 is half of 1000
+    stageHeight = canvasRow * generateRandomNumber(300, 700);
+    stageY = canvasRow * 380 - (stageHeight / 2); //Y is slightly offset to make room for main menu
+    //Get values to base our 2D Array
+    pathWidth = Math.round(stageWidth / (canvasRow * 85));
+    pathHeight = Math.round(stageHeight / (canvasCol * 85));
+    //So randomly generated barriers fit stage width & height
+    stageDivPathWidth = stageWidth / pathWidth;
+    stageDivPathHeight = stageHeight / pathHeight;
+    //Randomly generated map
+    randomMap = createMap();
+    barriers = generateMapGraphics(randomMap, 1);
+    barriers = condensePath(barriers);
+}
