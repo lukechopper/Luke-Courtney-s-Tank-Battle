@@ -220,10 +220,26 @@ function hasCannonBallHitTank(tank){
     }
 }
 
+
 //Tank colliding with another tank
-function tankOnTankColl(index){
+function tankOnTankColl(mainTank, action, velocity){
+    if(testForTankOnTankColl){
+    let index = tanks.indexOf(mainTank);
+    //Create a copy of mainTank
+    //Allows us to test for collision before we actually move
+    let thisTank = Object.assign(Object.create(Object.getPrototypeOf(mainTank)), mainTank);
+    if(action === "RIGHT"){
+        thisTank.rotationStore += thisTank.rotationSpeed;
+    }else if(action === "LEFT"){
+        thisTank.rotationStore -= thisTank.rotationSpeed;
+    }else if(action === "FORWARD"){
+        thisTank.x -= velocity.x * thisTank.moveSpeed;
+        thisTank.y -= velocity.y * thisTank.moveSpeed;
+    }else if(action === "BACKWARD"){
+        thisTank.x += velocity.x * thisTank.moveSpeed;
+        thisTank.y += velocity.y * thisTank.moveSpeed;
+    }
     //Red tank is at index 0. Green tank is at index 1.
-    let thisTank = tanks[index];
     let otherTank = index === 0 ? tanks[1] : tanks[0];
     //Get rotated coordinates for both tanks. thisTankRotated & otherTankRotated
     let tTR = getRotatedTankCoordinates(thisTank);
@@ -256,22 +272,10 @@ function tankOnTankColl(index){
     let thisTankPolygon = new polygon(thisTankVertices, thisTankEdges);
     let otherTankPolygon = new polygon(otherTankVertices, otherTankEdges);
 
-    if(sat(thisTankPolygon, otherTankPolygon) && !thisTank.tankVsTankCol){
-        //Block Direction
-        if(thisTank.lastKeyPressed[0] === "w" || thisTank.lastKeyPressed[0] === "ArrowUp"){
-            thisTank.blockedDirection = "FORWARD";
-        }else{
-            thisTank.blockedDirection = "BACKWARD";
-        }
-        //Block Rotation
-        if(thisTank.lastKeyPressed[1] === "a" || thisTank.lastKeyPressed[1] === "ArrowLeft"){
-            thisTank.blockedRotation = "LEFT";
-        }else{
-            thisTank.blockedRotation = "RIGHT";
-        }
-
-        thisTank.tankVsTankCol = true;
+    if(sat(thisTankPolygon, otherTankPolygon)){
+        return true;
+    }else{
+        return false;
     }
-
-
+}
 }

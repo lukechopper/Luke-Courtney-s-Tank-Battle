@@ -4,11 +4,19 @@ const ctx = canvas.getContext("2d");
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 //Split the dynamically sized canvas into cols & rows. Canvas will have 100 of each.
-let canvasCol = canvas.width / 1000;
-let canvasRow = canvas.height / 1000;
+let canvasCol = null;
+let canvasRow = null;
+//CANNOT play game if viewport is to small
+if(innerWidth > 453 && innerHeight > 216){
+    canvasCol = canvas.width / 1000;
+    canvasRow = canvas.height / 1000;
+}
 //Get the coordinate that lies dead in the middle of the canvas
 let centerCanvasX = canvas.width / 2;
 let centerCanvasY = canvas.height / 2;
+//KEEP TRACK OF SCORE
+let redTankScore = 0;
+let greenTankScore = 0;
 
 //GLOBAL FUNCTIONS
 function degreesIntoRadians(degrees){

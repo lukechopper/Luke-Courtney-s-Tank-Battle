@@ -6,10 +6,10 @@ const greenTankImg = new Image();
 greenTankImg.src="Assets/greenTank.png";
 greenTankImg.onload = loadImages;
 //Generate random spawn values
-const tankSpawnPos1 = spawnTankOne();
+let tankSpawnPos1 = spawnTankOne();
 let redTank = new Tank(tankSpawnPos1.x, tankSpawnPos1.y,
  tankWidth, tankHeight, redTankImg);
- const tankSpawnPos2 = spawnTankTwo({x:tankSpawnPos1.x,y:tankSpawnPos1.y});
+ let tankSpawnPos2 = spawnTankTwo({x:tankSpawnPos1.x,y:tankSpawnPos1.y});
 let greenTank = new Tank(tankSpawnPos2.x, tankSpawnPos2.y,
     tankWidth, tankHeight, greenTankImg);
 let tanks = [redTank, greenTank];
@@ -18,44 +18,90 @@ const tankHitBox = {height: canvasCol * 4}
 //No point checking for a tank on tank collision when other tank has been removed from Array.
 let testForTankOnTankColl = true;
 
+//Pause game - then load a new level
+function updateScores(){
+    gamePaused = true;
+    setTimeout(() => {
+        if(tanks.indexOf(redTank) !== -1){
+            redTankScore++;
+        }else if(tanks.indexOf(greenTank) !== -1){
+            greenTankScore++;
+        }
+    }, 1500);
+    setTimeout(() => {
+        loadANewLevel();
+    }, 3000);
+}
+
+function loadANewLevel(){
+    newMap();
+
+    tankSpawnPos1 = spawnTankOne();
+    redTank = new Tank(tankSpawnPos1.x, tankSpawnPos1.y,
+    tankWidth, tankHeight, redTankImg);
+    tankSpawnPos2 = spawnTankTwo({x:tankSpawnPos1.x,y:tankSpawnPos1.y});
+    greenTank = new Tank(tankSpawnPos2.x, tankSpawnPos2.y,
+        tankWidth, tankHeight, greenTankImg);
+    tanks = [redTank, greenTank];
+
+    cannonBalls = [];
+    p1NumOfCannonBalls = 0;
+    p2NumOfCannonBalls = 0;
+
+    gamePaused = false;
+    testForTankOnTankColl = true;
+}
+
 function animate(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     requestAnimationFrame(animate);
 
-    //Background needs to be drawn above everything else
-    drawMap();
-    
-    tanks.forEach((tank, index) => {
-        //Edges of the canvas take into account the border's width
-        hasTankHitStage(tank, {le: stageX + canvasCol * 2, re: stageX + stageWidth - (canvasCol * 2), 
-            te: stageY + canvasRow * 5, be: stageY + stageHeight - (canvasRow * 5)});
-        hasTankCollidedWithBarrier(tank);
-        hasCannonBallHitTank(tank);
-        if(testForTankOnTankColl) tankOnTankColl(index);
-        tank.draw();
-        //Remove tank if it has fully disapeared
-        if(tank.alphaLevel <= 0){
-            setTimeout(() => {
-                tanks.splice(index, 1);
-                testForTankOnTankColl = false;
-            }, 0);
-        }
-    });
+    if(hasGameStarted){
+        //Background needs to be drawn above everything else
+        drawMap();
+        
+        tanks.forEach((tank, index) => {
+            //Edges of the canvas take into account the border's width
+            hasTankHitStage(tank, {le: stageX + canvasCol * 2, re: stageX + stageWidth - (canvasCol * 2), 
+                te: stageY + canvasRow * 5, be: stageY + stageHeight - (canvasRow * 5)});
+            hasTankCollidedWithBarrier(tank);
+            hasCannonBallHitTank(tank);
+            tank.draw();
+            //Remove tank if it has fully disapeared
+            if(tank.alphaLevel <= 0){
+                setTimeout(() => {
+                    tanks.splice(index, 1);
+                    //PREVENT ANOTHER MAP LOAD IF BOTH TANKS ARE DESTROYED
+                    if(testForTankOnTankColl){
+                        setTimeout(() => {
+                            updateScores();
+                        }, 3000);
+                    }
+                    testForTankOnTankColl = false;
+                }, 0);
+            }
+        });
 
-    cannonBalls.forEach((cannonBall, index) => {
-        //Destroy cannonBall if it's opacity has faded
-        if(cannonBall.shouldDestroy){
-            setTimeout(() => {
-                cannonBalls.splice(index, 1);
-                p1NumOfCannonBalls--;
-            }, 0)
-        }
-        cannonBall.move();
-        cannonBallsHitEdgeOfCanvas(cannonBall);
-        //Remove from Array if it has left the canvas
-        cannonBallLeftViewport(cannonBall, index);
-        cannonInBarrier(cannonBall);
-    });
+        cannonBalls.forEach((cannonBall, index) => {
+            //Destroy cannonBall if it's opacity has faded
+            if(cannonBall.shouldDestroy){
+                setTimeout(() => {
+                    cannonBalls.splice(index, 1);
+                    p1NumOfCannonBalls--;
+                }, 0)
+            }
+            cannonBall.move();
+            cannonBallsHitEdgeOfCanvas(cannonBall);
+            //Remove from Array if it has left the canvas
+            cannonBallLeftViewport(cannonBall, index);
+            cannonInBarrier(cannonBall);
+        });
+        //GUI
+        drawScoreCounter();
+    }else{
+        drawMainMenu();
+        showUserControls();
+    }
 }
 
 

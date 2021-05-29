@@ -1,3 +1,6 @@
+//PREVENT GAME OBJECTS FROM MOVING WHEN GAME IS PAUSED
+let gamePaused = false;
+
 class Tank{
     constructor(x, y, width, height, image){
         this.x = x;
@@ -13,8 +16,6 @@ class Tank{
         this.canShoot = true; //Prevent cannon balls from being spammed
         this.blockedDirection = "NAN";
         this.blockedRotation = "NAN";
-        this.lastKeyPressed = ["NAN","NAN"] //First is dir. Second is rotation.
-        this.tankVsTankCol = false; //Used in tank on tank collision
         this.destroyState = "NAN";
         this.alphaLevel = 1;
     }
@@ -22,22 +23,25 @@ class Tank{
         let centerX = this.x + (this.width / 2);
         let centerY = this.y + (this.height / 2) + tankHitBox.height;
         ctx.translate(centerX, centerY);
-        if(this.rotationDirection === "RIGHT" && this.blockedRotation !== "RIGHT"){
-            this.rotationStore += this.rotationSpeed;
-            if(this.blockedRotation === "LEFT"){
-                this.blockedRotation = "NAN";
-                this.blockedDirection = "NAN";
-                this.tankVsTankCol = false;
-            } 
-        } 
-        if(this.rotationDirection === "LEFT" && this.blockedRotation !== "LEFT"){
-            this.rotationStore -= this.rotationSpeed;
-            if(this.blockedRotation === "RIGHT"){
-                this.blockedRotation = "NAN";
-                this.blockedDirection = "NAN";
-                this.tankVsTankCol = false;
+        if(!gamePaused){
+        if(this.rotationDirection === "RIGHT" && this.blockedRotation !== "RIGHT" ){
+            if(!tankOnTankColl(this, "RIGHT")){
+                this.rotationStore += this.rotationSpeed;
+                if(this.blockedRotation === "LEFT"){
+                    this.blockedRotation = "NAN";
+                    this.blockedDirection = "NAN";
+                } 
             }
-        } 
+        }else if(this.rotationDirection === "LEFT" && this.blockedRotation !== "LEFT" ){
+            if(!tankOnTankColl(this, "LEFT")){
+                this.rotationStore -= this.rotationSpeed;
+                if(this.blockedRotation === "RIGHT"){
+                    this.blockedRotation = "NAN";
+                    this.blockedDirection = "NAN";
+                }
+            }
+        }
+        }
         let fixedRotation = degreesIntoRadians(this.rotationStore) - degreesIntoRadians(90);
         let fixedRotationInDegrees = this.rotationStore - 90;
         ctx.rotate(fixedRotation);
@@ -53,21 +57,23 @@ class Tank{
         ctx.rotate(0); //Restore rotation so that we can move tank in the proper direction
         let velocityX = Math.cos(degreesIntoRadians(this.rotationStore));
         let velocityY = Math.sin(degreesIntoRadians(this.rotationStore));
-        if(this.direction === "FORWARD" && this.blockedDirection !== "FORWARD"){
-            this.x -= velocityX * this.moveSpeed;
-            this.y -= velocityY * this.moveSpeed;
-            if(this.blockedDirection === "BACKWARD"){
-                this.blockedRotation = "NAN";
-                this.blockedDirection = "NAN";
-                this.tankVsTankCol = false;
+        if(this.direction === "FORWARD" && this.blockedDirection !== "FORWARD" ){
+            if(!tankOnTankColl(this, "FORWARD", {x:velocityX,y:velocityY})){
+                this.x -= velocityX * this.moveSpeed;
+                this.y -= velocityY * this.moveSpeed;
+                if(this.blockedDirection === "BACKWARD"){
+                    this.blockedRotation = "NAN";
+                    this.blockedDirection = "NAN";
+                }
             }
-        }else if(this.direction === "BACKWARD" && this.blockedDirection !== "BACKWARD"){
-            this.x += velocityX * this.moveSpeed;
-            this.y += velocityY * this.moveSpeed;
-            if(this.blockedDirection === "FORWARD"){
-                this.blockedRotation = "NAN";
-                this.blockedDirection = "NAN";
-                this.tankVsTankCol = false;
+        }else if(this.direction === "BACKWARD" && this.blockedDirection !== "BACKWARD" ){
+            if(!tankOnTankColl(this, "BACKWARD", {x:velocityX,y:velocityY})){
+                this.x += velocityX * this.moveSpeed;
+                this.y += velocityY * this.moveSpeed;
+                if(this.blockedDirection === "FORWARD"){
+                    this.blockedRotation = "NAN";
+                    this.blockedDirection = "NAN";
+                }
             }
         }
         ctx.translate(-centerX, -centerY);
@@ -81,7 +87,7 @@ class Tank{
         ctx.globalAlpha = this.alphaLevel;
     }
     draw(){
-        if(this.direction !== "NAN") this.move();
+        if(this.direction !== "NAN" && !gamePaused) this.move();
         ctx.save();
         if(this.destroyState === "BEGIN") this.destroy();
         this.rotate();
@@ -92,7 +98,6 @@ class Tank{
 //GLOBAL VARIABLES: TANK CLASS
 const tankWidth = canvasCol *  23;
 const tankHeight = canvasCol * 33;
-
 
 class CannonBall{
     constructor(x, y, vx, vy){
@@ -107,9 +112,11 @@ class CannonBall{
         this.collTime = null; //Used to prevent any collision errors
     }
     move(){
-        this.x += this.vx;
-        this.y += this.vy;
-        if(new Date() - this.creationDate >= 8000){
+        if(!gamePaused){
+            this.x += this.vx;
+            this.y += this.vy;
+        }
+        if(new Date() - this.creationDate >= 8000 && !gamePaused){
             this.destroy();
         }else{
             this.draw();
