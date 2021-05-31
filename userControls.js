@@ -28,7 +28,7 @@ addEventListener("keydown", e => {
         p1DirectionKey = "s";
     }
     //Shoot a cannonBall
-    if(e.key === "q" && tanks[0]){
+    if(e.key === "q" && !gamePaused && tanks.indexOf(redTank) !== -1){
         if(redTank.canShoot && p1ReleasedFireKey && p1NumOfCannonBalls < 5){
             let centerX = redTank.x + redTank.width / 2;
             let topY = redTank.y;
@@ -38,6 +38,9 @@ addEventListener("keydown", e => {
             let speed = canvasCol * 3;
             let velocityX = -Math.cos(degreesIntoRadians(redTank.rotationStore)) * (speed);
             let velocityY = -Math.sin(degreesIntoRadians(redTank.rotationStore)) * (speed);
+            if(cannonInBarrierBoolean(new CannonBall(newValues.x, newValues.y, velocityX, velocityY))){
+                return;
+            }
             cannonBalls.push(new CannonBall(newValues.x, newValues.y, velocityX, velocityY)); 
             //Prevent cannonball from being fired until timeout has elapsed
             redTank.canShoot = false;
@@ -46,6 +49,7 @@ addEventListener("keydown", e => {
             setTimeout(() => {
                 redTank.canShoot = true;
             }, 100);
+            playAudio(shootSFX);
         }
     }
     //PLAYER 2 VARIATIONS OF THE ABOVE CODE
@@ -65,7 +69,7 @@ addEventListener("keydown", e => {
         p2DirectionKey = e.key;
     }
     //Shoot a cannonball
-    if(e.key === " " && tanks[1]){
+    if(e.key === " " && !gamePaused && tanks.indexOf(greenTank) !== -1){
         if(greenTank.canShoot && p2ReleasedFireKey && p2NumOfCannonBalls < 5){
             let centerX = greenTank.x + greenTank.width / 2;
             let topY = greenTank.y;
@@ -75,6 +79,9 @@ addEventListener("keydown", e => {
             let speed = canvasCol * 3;
             let velocityX = -Math.cos(degreesIntoRadians(greenTank.rotationStore)) * (speed);
             let velocityY = -Math.sin(degreesIntoRadians(greenTank.rotationStore)) * (speed);
+            if(cannonInBarrierBoolean(new CannonBall(newValues.x, newValues.y, velocityX, velocityY))){
+                return;
+            }
             cannonBalls.push(new CannonBall(newValues.x, newValues.y, velocityX, velocityY)); 
             //Prevent cannonball from being fired until timeout has elapsed
             greenTank.canShoot = false;
@@ -83,6 +90,7 @@ addEventListener("keydown", e => {
             setTimeout(() => {
                 greenTank.canShoot = true;
             }, 100);
+            playAudio(shootSFX);
         }
     }
 });

@@ -27,8 +27,8 @@ function create2DArray(num, row, col){
 }
 
 //Get values to base our 2D Array
-let pathWidth = Math.round(stageWidth / (canvasRow * 85));
-let pathHeight = Math.round(stageHeight / (canvasCol * 85));
+let pathWidth = Math.round(stageWidth / (canvasCol * 85));
+let pathHeight = Math.round(stageHeight / (canvasRow * 85));
 //So randomly generated barriers fit stage width & height
 let stageDivPathWidth = stageWidth / pathWidth;
 let stageDivPathHeight = stageHeight / pathHeight;
@@ -38,6 +38,10 @@ function createMap(){
     let maxWalls = 15;
     //Longest time in a single direction before changing direction
     let maxLength = 10;
+    if(stageWidth < 300 || stageHeight < 500){
+        maxWalls = 15;
+        maxLength = 3;
+    }
     //Generate Map
     let map = create2DArray(1, pathHeight, pathWidth);
     //Generate starting row & column

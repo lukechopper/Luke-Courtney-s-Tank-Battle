@@ -39,22 +39,34 @@ function hasTankHitStage(tank, stage){
 
 //Check to see if cannon balls have hit the edge of the canvas
 function cannonBallsHitEdgeOfCanvas(cannonBall){
+    let hadCollision = false;
     if(cannonBall.x - cannonBall.radius < stageX){
         //Left edge collision
         cannonBall.x = stageX + cannonBall.radius;
         cannonBall.vx *= -1;
+        hadCollision = true;
     }else if(cannonBall.x + cannonBall.radius > stageX + stageWidth){
         //Right edge collision
         cannonBall.x = (stageX + stageWidth) - cannonBall.radius;
         cannonBall.vx *= -1;
+        hadCollision = true;
     }else if(cannonBall.y - cannonBall.radius < stageY){
         //Top edge collision
         cannonBall.y = stageY + cannonBall.radius;
         cannonBall.vy *= -1;
+        hadCollision = true;
     }else if(cannonBall.y + cannonBall.radius > stageY + stageHeight){
         //Bottom edge collision
         cannonBall.y = (stageY + stageHeight) - cannonBall.radius;
         cannonBall.vy *= -1;
+        hadCollision = true;
+    }
+
+    if(hadCollision){
+        if(!gamePaused && new Date() - lastClink > 50){
+            playAudio(clinkSFX, 0.3);
+            lastClink = new Date();
+        } 
     }
 }
 
@@ -120,6 +132,36 @@ function cannonInBarrier(cannonBall){
     }
 }
 
+//Check to see if cannonBall has collided with barrier. BOOLEAN VERSION
+function cannonInBarrierBoolean(cannonBall){
+    for(let i = 0; i < barriers.length; i++){
+        let barrier = barriers[i];
+
+        //Work out barrier edges
+        let leftEdge = stageX + (barrier.x * stageDivPathWidth);
+        let width = (stageDivPathWidth ) * barrier.length;
+        let topEdge = stageY + (barrier.y * stageDivPathHeight);
+        let height = stageDivPathHeight + 1;
+        //Distance between circle centre & rectangle centre
+        var distX = Math.abs(cannonBall.x - leftEdge - width/2);
+        var distY = Math.abs(cannonBall.y - topEdge - height/2);
+        //Too far apart to be colliding
+        if (distX > (width/2 + cannonBall.radius)) { continue; }
+        if (distY > (height/2 + cannonBall.radius)) { continue; }
+        // SIDE COLLISIONS
+        if (distX <= (width/2)) { return true} 
+        if (distY <= (height/2)) { return true }
+    
+        // CORNER COLLISIONS
+        var dx=distX-width/2;
+        var dy=distY-height/2;
+        if (dx*dx+dy*dy<=(cannonBall.radius*cannonBall.radius)){
+            return true
+        }
+    }
+    return false;
+}
+
 //Respond to a collision between cannonBall & barrier
 function cannonBallHitBarrier(cannonBall, type){
     //See if they where going sideways or not
@@ -134,7 +176,11 @@ function cannonBallHitBarrier(cannonBall, type){
             cannonBall.vy *= -1;
         }
     }
-    cannonBall.collide();
+
+    if(!gamePaused && new Date() - lastClink > 50){
+        playAudio(clinkSFX, 0.3);
+        lastClink = new Date();
+    } 
 }
 
 //Check to see if tank has hit one of the barriers

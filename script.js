@@ -6,17 +6,18 @@ const greenTankImg = new Image();
 greenTankImg.src="Assets/greenTank.png";
 greenTankImg.onload = loadImages;
 //Generate random spawn values
-let tankSpawnPos1 = spawnTankOne();
-let redTank = new Tank(tankSpawnPos1.x, tankSpawnPos1.y,
+//RED TANK - PLAYER 1. GREEN TANK - PLAYER 2.
+tankSpawnPos1 = spawnTank();
+redTank = new Tank(tankSpawnPos1.x, tankSpawnPos1.y,
  tankWidth, tankHeight, redTankImg);
- let tankSpawnPos2 = spawnTankTwo({x:tankSpawnPos1.x,y:tankSpawnPos1.y});
-let greenTank = new Tank(tankSpawnPos2.x, tankSpawnPos2.y,
+tankSpawnPos2 = spawnTank({x:tankSpawnPos1.x,y:tankSpawnPos1.y});
+greenTank = new Tank(tankSpawnPos2.x, tankSpawnPos2.y,
     tankWidth, tankHeight, greenTankImg);
-let tanks = [redTank, greenTank];
+tanks = [redTank, greenTank];
 //So tank has a proper point of rotation without the firing muzzle
 const tankHitBox = {height: canvasCol * 4}
 //No point checking for a tank on tank collision when other tank has been removed from Array.
-let testForTankOnTankColl = true;
+testForTankOnTankColl = true;
 
 //Pause game - then load a new level
 function updateScores(){
@@ -36,10 +37,10 @@ function updateScores(){
 function loadANewLevel(){
     newMap();
 
-    tankSpawnPos1 = spawnTankOne();
+    tankSpawnPos1 = spawnTank();
     redTank = new Tank(tankSpawnPos1.x, tankSpawnPos1.y,
     tankWidth, tankHeight, redTankImg);
-    tankSpawnPos2 = spawnTankTwo({x:tankSpawnPos1.x,y:tankSpawnPos1.y});
+    tankSpawnPos2 = spawnTank({x:tankSpawnPos1.x,y:tankSpawnPos1.y});
     greenTank = new Tank(tankSpawnPos2.x, tankSpawnPos2.y,
         tankWidth, tankHeight, greenTankImg);
     tanks = [redTank, greenTank];

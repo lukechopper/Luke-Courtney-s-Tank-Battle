@@ -17,6 +17,25 @@ let centerCanvasY = canvas.height / 2;
 //KEEP TRACK OF SCORE
 let redTankScore = 0;
 let greenTankScore = 0;
+//AUDIO
+const shootSFX = "Assets/sounds/Shoot.wav";
+const clinkSFX = "https://www.freesound.org/data/previews/366/366328_6039328-lq.mp3";
+let lastClink = new Date();
+//Play Audio Simultaneously
+function playAudio(audioSrc, skipTime){
+
+    if(!skipTime) skipTime = 0;
+
+    let audio = document.createElement('audio');
+    audio.src = audioSrc;
+    document.body.appendChild(audio);
+    audio.currentTime = skipTime;
+    audio.play();
+
+    audio.onended = () => {
+        audio.parentNode.removeChild(audio);
+    }
+}
 
 //GLOBAL FUNCTIONS
 function degreesIntoRadians(degrees){

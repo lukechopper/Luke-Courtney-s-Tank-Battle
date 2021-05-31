@@ -133,21 +133,6 @@ class CannonBall{
         this.draw();
         ctx.restore();
     }
-    collide(){
-        if(this.collTime){
-            /*If there has been less then 3 milliseconds before last collision, then we know that the ball must be
-            stuck in a wall. In which case we will seperate the ball from the wall so that it is no longer stuck.*/
-            if(new Date() - this.collTime < 3){
-                let angle = Math.atan2(this.vy, this.vx);
-                let newVx = Math.cos(angle);
-                let newVy = Math.sin(angle);
-                this.x += newVx * (this.radius * 2);
-                this.y += newVy * (this.radius * 2);
-            }
-        }
-
-        this.collTime = new Date();
-    }
     draw(){
         ctx.beginPath();
         ctx.fillStyle = "black";
