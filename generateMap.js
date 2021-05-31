@@ -167,4 +167,7 @@ function newMap(){
     randomMap = createMap();
     barriers = generateMapGraphics(randomMap, 1);
     barriers = condensePath(barriers);
+    nonBarriers = generateMapGraphics(randomMap, 0);
+    nonBarriers = condensePath(nonBarriers);
+    randomYSlice = getRandomYSlice();
 }
